@@ -1,5 +1,5 @@
 return {
-  -- Mason: instala binarios LSP
+  -- Mason: install binaries LSP
   {
     "williamboman/mason.nvim",
     config = function()
@@ -17,6 +17,11 @@ return {
           "gopls",
           "rust_analyzer",
           "ts_ls",
+
+          -- HTML / CSS
+          "html",
+          "cssls",
+          "emmet_ls",
         },
       })
     end,
@@ -26,24 +31,21 @@ return {
   {
     "neovim/nvim-lspconfig",
     config = function()
-      -- Lua (Neovim)
+      -- Lua
       vim.lsp.config.lua_ls = {
         settings = {
           Lua = {
-            diagnostics = {
-              globals = { "vim" },
-            },
+            diagnostics = { globals = { "vim" } },
           },
         },
       }
 
+      -- Go
       vim.lsp.config.gopls = {
         settings = {
           gopls = {
             semanticTokens = true,
-            analyses = {
-              unusedparams = true,
-            },
+            analyses = { unusedparams = true },
             staticcheck = true,
           },
         },
@@ -54,14 +56,15 @@ return {
       vim.lsp.enable("gopls")
       vim.lsp.enable("rust_analyzer")
       vim.lsp.enable("ts_ls")
+      vim.lsp.enable("html")
+      vim.lsp.enable("cssls")
+      vim.lsp.enable("emmet_ls")
 
-      -- Keymaps LSP
-      vim.keymap.set("n", "K", vim.lsp.buf.hover, {})
-      vim.keymap.set("n", "gd", vim.lsp.buf.definition, {})
-      vim.keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, {})
-      vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, {
-        desc = "Show diagnostic",
-      })
+      -- Keymaps
+      vim.keymap.set("n", "K", vim.lsp.buf.hover)
+      vim.keymap.set("n", "gd", vim.lsp.buf.definition)
+      vim.keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action)
+      vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float)
     end,
-  },
+  }
 }

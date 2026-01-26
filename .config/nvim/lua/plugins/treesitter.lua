@@ -3,7 +3,22 @@ return {
   lazy = false,
   build = ":TSUpdate",
   opts = {
-    ensure_installed = { "rust", "javascript", "zig", "go" },
+    ensure_installed = {
+      "html",
+      "css",
+
+      -- frontend
+      "javascript",
+      "typescript",
+      "tsx",
+      "json",
+
+      -- backend
+      "rust",
+      "go",
+      "zig",
+      "lua",
+    },
     highlight = {
       enable = true,
     },
