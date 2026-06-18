@@ -78,26 +78,67 @@ return {
         vim.defer_fn(jump, 50)
       end
 
-      local function grep_mappings(prompt_bufnr)
+      local open_grep
+
+      local function grep_mappings(prompt_bufnr, opts)
         vim.keymap.set("i", "<C-r>", function() enter_replace(prompt_bufnr) end,
           { buffer = prompt_bufnr, nowait = true })
         vim.keymap.set("n", "<C-r>", function() enter_replace(prompt_bufnr) end,
           { buffer = prompt_bufnr, nowait = true })
+
+        local function rescope()
+          local query = action_state.get_current_line() or ""
+          actions.close(prompt_bufnr)
+          local hint = vim.fn.fnamemodify(opts.origin, ":~:.")
+          vim.ui.input({
+            prompt = "Grep folder (empty = " .. hint .. "): ",
+            completion = "dir",
+          }, function(input)
+            if input == nil then
+              vim.schedule(function()
+                open_grep(vim.tbl_extend("force", opts, { default_text = query }))
+              end)
+              return
+            end
+            local folder = input == "" and opts.origin or input
+            vim.schedule(function()
+              open_grep(vim.tbl_extend("force", opts, {
+                search_dirs = { vim.fn.fnamemodify(folder, ":p") },
+                default_text = query,
+              }))
+            end)
+          end)
+        end
+
+        vim.keymap.set("i", "<C-s>", rescope, { buffer = prompt_bufnr, nowait = true })
+        vim.keymap.set("n", "<C-s>", rescope, { buffer = prompt_bufnr, nowait = true })
+
         actions.select_default:replace(function() open_at_match(prompt_bufnr) end)
         return true
+      end
+
+      open_grep = function(opts)
+        opts = opts or {}
+        opts.origin = opts.origin or vim.fn.expand("%:p:h")
+        local picker = {
+          attach_mappings = function(prompt_bufnr) return grep_mappings(prompt_bufnr, opts) end,
+        }
+        if opts.literal then
+          picker.additional_args = function() return { "--fixed-strings" } end
+        end
+        if opts.search_dirs then picker.search_dirs = opts.search_dirs end
+        if opts.default_text then picker.default_text = opts.default_text end
+        builtin.live_grep(picker)
       end
 
       vim.keymap.set("n", "<C-p>", builtin.find_files, { desc = "Find files" })
 
       vim.keymap.set("n", "<leader>fg", function()
-        builtin.live_grep({
-          additional_args = function() return { "--fixed-strings" } end,
-          attach_mappings = grep_mappings,
-        })
+        open_grep({ literal = true })
       end, { desc = "Live grep (literal)" })
 
       vim.keymap.set("n", "<leader>fG", function()
-        builtin.live_grep({ attach_mappings = grep_mappings })
+        open_grep({})
       end, { desc = "Live grep (regex)" })
     end,
   },
